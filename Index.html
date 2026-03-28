@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Organistas - Abril 2026</title>
+    <style>
+        :root {
+            --rosa-fundo: #fffafa;
+            --rosa-suave: #fce4ec;
+            --rosa-destaque: #f06292;
+            --rosa-texto: #880e4f;
+            --dourado: #b8975a;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--rosa-fundo); color: #444; margin: 0; padding: 15px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        h1 { text-align: center; color: var(--rosa-texto); font-weight: 300; margin-bottom: 5px; font-size: 1.5em; }
+        .sub { text-align: center; color: var(--dourado); margin-bottom: 15px; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; }
+
+        .tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid var(--rosa-suave); padding-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { background: white; border: 1px solid var(--rosa-suave); padding: 8px 10px; cursor: pointer; color: #777; font-weight: 600; font-size: 0.65em; border-radius: 25px; transition: 0.3s; flex: 1; min-width: 80px; }
+        .tab-btn.active { background: var(--rosa-destaque); color: white; border-color: var(--rosa-destaque); box-shadow: 0 4px 10px rgba(240, 98, 146, 0.3); }
+
+        .header-action { text-align: center; margin-bottom: 20px; }
+        #btn-permitir { background: var(--dourado); color: white; border: none; padding: 10px 20px; border-radius: 30px; font-size: 0.8em; cursor: pointer; box-shadow: 0 4px 10px rgba(184, 151, 90, 0.2); }
+
+        .mes-section { margin-bottom: 30px; border: 1px solid var(--rosa-suave); border-radius: 15px; overflow: hidden; animation: fadeIn 0.4s; }
+        .mes-header { background: var(--rosa-destaque); color: white; padding: 10px; text-align: center; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fff5f7; padding: 10px; font-size: 0.7em; color: var(--rosa-texto); text-transform: uppercase; border-bottom: 2px solid var(--rosa-suave); }
+        .instrucao { display: block; font-size: 0.85em; color: var(--dourado); text-transform: none; font-weight: normal; margin-top: 4px; font-style: italic; }
+        
+        td { padding: 10px; text-align: center; border-bottom: 1px solid #f9f9f9; font-size: 0.9em; }
+        .data-txt { font-weight: bold; color: var(--rosa-texto); }
+        .dia-semana { display: block; font-size: 0.7em; color: var(--dourado); }
+
+        .btn-organista {
+            background: white; border: 1px solid var(--rosa-suave); color: #555;
+            cursor: pointer; padding: 10px; border-radius: 12px; width: 100%; transition: 0.2s;
+            font-size: 0.9em; font-weight: 500;
+        }
+        .btn-clicked { background: #e8f5e9 !important; border-color: #a5d6a7 !important; color: #2e7d32 !important; }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 15px 25px; border-radius: 50px; display: none; z-index: 1000; width: 80%; text-align: center; font-size: 0.9em; animation: slideDown 0.5s; }
+        
+        @keyframes slideDown { from { top: -50px; } to { top: 20px; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="container">
+    <h1>Escala de Organistas</h1>
+    <p class="sub" id="nome-igreja-display">Central</p>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="mudarIgreja('Central', this)">Central</button>
+        <button class="tab-btn" onclick="mudarIgreja('Cidade Futuro', this)">Cid. Futuro</button>
+        <button class="tab-btn" onclick="mudarIgreja('Cidade Nova', this)">Cid. Nova</button>
+        <button class="tab-btn" onclick="mudarIgreja('Hermírio Simões', this)">H. Simões</button>
+        <button class="tab-btn" onclick="mudarIgreja('Juazeiro', this)">Juazeiro</button>
+        <button class="tab-btn" onclick="mudarIgreja('Lagoa das Pedras', this)">L. Pedras</button>
+        <button class="tab-btn" onclick="mudarIgreja('Minação', this)">Minação</button>
+        <button class="tab-btn" onclick="mudarIgreja('Populares', this)">Populares</button>
+        <button class="tab-btn" onclick="mudarIgreja('Reunião de Jovens', this)">R. Jovens</button>
+    </div>
+
+    <div class="header-action">
+        <button id="btn-permitir" onclick="solicitarPermissao()">🔔 Ativar Notificações no Celular</button>
+    </div>
+
+    <div id="calendario"></div>
+</div>
+
+<script>
+    const configuracaoIgrejas = {
+        "Central": { 
+            organistas: ["Josy", "Carol", "Cássia", "Lely", "Raquel", "Viviane", "Cássia", "Lucy", "Mariana", "Viviane", "Laila", "Carol", "Mariana", "Josy", "Raquel", "Carol", "Lely", "Lucy", "Raquel", "Cássia", "Laila", "Lucy", "Viviane", "Josy", "Laila", "Mariana", "Lely", "Josy", "Carol", "Cássia", "Lely", "Raquel", "Viviane", "Cássia", "Lucy", "Mariana", "Viviane", "Laila", "Carol", "Mariana", "Josy", "Raquel", "Carol", "Lely", "Lucy", "Raquel", "Cássia", "Laila", "Lucy", "Viviane", "Josy", "Laila", "Mariana", "Lely", "Josy", "Carol", "Cássia", "Lely", "Raquel", "Viviane", "Cássia", "Lucy", "Mariana", "Viviane", "Laila", "Carol"], 
+            dias: [0, 3, 5], 
+            inicioPointer: 0 
+        },
+        "Cidade Futuro": { organistas: ["Daisy", "Mariana"], dias: [2], inicioPointer: 0 },
+        "Cidade Nova": { organistas: ["Rebeca", "Carol", "Lucy", "Jemima", "Jemima", "Rebeca", "Rebeca", "Raquel", "Lucy", "Carol", "Jemima", "Jemima", "Rebeca", "Rebeca", "Lucy", "Raquel", "Jemima", "Carol", "Rebeca", "Jemima", "Lucy", "Rebeca", "Jemima", "Raquel", "Rebeca", "Carol", "Lucy", "Jemima", "Jemima", "Rebeca", "Rebeca", "Raquel", "Lucy", "Carol", "Jemima", "Jemima", "Rebeca", "Rebeca", "Lucy", "Raquel", "Jemima", "Carol", "Rebeca", "Jemima"], dias: [2, 4], inicioPointer: 1 },
+        "Hermírio Simões": { organistas: ["Camile", "Neide"], dias: [4], inicioPointer: 0 },
+        "Juazeiro": { organistas: ["Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy", "Josy", "Lely", "Lely", "Josy"], dias: [2, 6], inicioPointer: 1 },
+        "Lagoa das Pedras": { organistas: ["Carol", "Maeli", "Sara"], dias: [2], inicioPointer: 0 },
+        "Minação": { organistas: ["Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy", "Tarsilla", "Rízia", "Daisy"], dias: [1, 6], inicioPointer: 1 },
+        "Populares": { organistas: ["Cassia", "Lely"], dias: [4], inicioPointer: 0 },
+        "Reunião de Jovens": { organistas: ["Isabel", "Sara", "Cassia", "Raquel"], dias: [0], inicioPointer: 0 }
+    };
+
+    const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    let igrejaAtual = "Central";
+
+    function mudarIgreja(nome, btn) {
+        igrejaAtual = nome;
+        document.getElementById('nome-igreja-display').innerText = nome;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gerarEscala();
+    }
+
+    function solicitarPermissao() {
+        Notification.requestPermission().then(perm => {
+            if (perm === "granted") {
+                mostrarAviso("Notificações ativadas!");
+                document.getElementById('btn-permitir').style.display = 'none';
+            }
+        });
+    }
+
+    function gerarEscala() {
+        const cal = document.getElementById('calendario');
+        let html = '';
+        const ano = 2026;
+        const dadosIgreja = configuracaoIgrejas[igrejaAtual];
+        const diasDeCulto = dadosIgreja.dias;
+        const listaOrganistas = dadosIgreja.organistas;
+        let pointer = dadosIgreja.inicioPointer;
+
+        // Loop de Abril (índice 3) até Agosto (índice 7)
+        for (let mes = 3; mes <= 7; mes++) {
+            let mesesHtml = '';
+            let diasNoMes = new Date(ano, mes + 1, 0).getDate();
+            let teveCulto = false;
+
+            for (let dia = 1; dia <= diasNoMes; dia++) {
+                let dataAtual = new Date(ano, mes, dia);
+                let diaSemana = dataAtual.getDay(); 
+
+                if (diasDeCulto.includes(diaSemana)) {
+                    teveCulto = true;
+                    let diasNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+                    let organista = listaOrganistas[pointer % listaOrganistas.length];
+                    let dataF = `${dia.toString().padStart(2, '0')}/${(mes + 1).toString().padStart(2, '0')}`;
+                    
+                    mesesHtml += `<tr>
+                                <td class="data-txt">${dataF}<span class="dia-semana">${diasNomes[diaSemana]}</span></td>
+                                <td><button class="btn-organista" onclick="cliqueNome(this, '${organista}', '${dataF}')">${organista}</button></td>
+                             </tr>`;
+                    pointer++;
+                }
+            }
+
+            if (teveCulto) {
+                html += `<div class="mes-section">
+                            <div class="mes-header">${nomesMeses[mes]} ${ano}</div>
+                            <table>
+                                <thead>
+                                    <tr><th>Data</th><th>Organista <span class="instrucao">Clique no seu nome para ativar lembrete 🔔</span></th></tr>
+                                </thead>
+                                <tbody>${mesesHtml}</tbody>
+                            </table>
+                        </div>`;
+            }
+        }
+        cal.innerHTML = html;
+    }
+
+    function cliqueNome(btn, nome, data) {
+        btn.classList.add('btn-clicked');
+        btn.innerHTML = `✅ ${nome}`;
+        if (Notification.permission === "granted") {
+            new Notification(`Escala ${igrejaAtual}`, { body: `A Paz de Deus! Confirmado para ${data}.` });
+        }
+        mostrarAviso(`Confirmado: ${nome} em ${data}`);
+        setTimeout(() => {
+            btn.classList.remove('btn-clicked');
+            btn.innerHTML = nome;
+        }, 2000);
+    }
+
+    function mostrarAviso(texto) {
+        const toast = document.getElementById('toast');
+        toast.innerHTML = texto;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    gerarEscala();
+</script>
+
+</body>
+</html>
+
